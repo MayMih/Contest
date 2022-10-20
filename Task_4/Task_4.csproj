@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Docs\Задача 4.mhtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data3.txt">
