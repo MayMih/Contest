@@ -2,6 +2,9 @@
 
 namespace Task_2
 {
+    /// <summary>
+    /// Задача 2. "Раздел рулета" - (задача на чётность и умение читать условие)
+    /// </summary>
     internal static class Program
     {
         static void Main(string[] args)

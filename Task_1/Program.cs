@@ -4,6 +4,9 @@ using System.Windows.Forms;
 
 namespace Task_1
 {
+    /// <summary>
+    /// Задача 1. "Рассчёт тарифа2 (простая задача на файлы и формулы)
+    /// </summary>
     internal static class Program
     {
         /// <summary>
