@@ -49,7 +49,8 @@ namespace Task_4
                 int i = 0;
                 numbers = arrNumbers.Select(x => {
                     var num = long.Parse(x);
-                    if (num > 10_000_000_000)
+                    /* (1 ≤ ai ≤ 10^9)  */
+                    if (num > 1_000_000_000)
                     {
                         throw new ArgumentOutOfRangeException("ai﻿﻿ — чисел на бумажке должно выполняться (1 ≤ ai ≤ 10 000 000 000)");
                     }
