@@ -2,8 +2,9 @@
 
 using NUnit.Framework;
 
+using Task_5;
 
-namespace Task_5.Tests
+namespace Task_5_Tests
 {
     [TestFixture(Description = "Проверка метода подсчёта кол-ва чисел из одной цифры в указанных пределах")]
     public class GetOneDigitNumbersCount_Tests
@@ -26,7 +27,7 @@ namespace Task_5.Tests
         [TestCase(103ul, 111ul, ExpectedResult = 1ul)]
         [TestCase(12ul, 255ul, ExpectedResult = 10ul)]
         [TestCase(1ul, 255ul, ExpectedResult = 20ul)]
-        [TestCase(25ul, 34_147ul, ExpectedResult = 7+18+3ul)]   //26
+        [TestCase(25ul, 34_147ul, ExpectedResult = 7+18+3ul)]   //28
         public ulong GetOneDigitNumbersCount_NormalTest(ulong leftMargin, ulong rightMargin)
         {            
             return Program.GetOneDigitNumbersCount(leftMargin, rightMargin);            
@@ -49,7 +50,7 @@ namespace Task_5.Tests
     [TestFixture(Description = "Проверка метода генерации числа из одной и той же цифры")]
     public class GenerateNumberByDigit_Tests
     {
-        [Test(Description = "Нормальная ситуация")]       
+        [Test(Description = "Нормальная ситуация")]        
         [TestCase(1U, 2U, ExpectedResult = 11UL)]
         [TestCase(2U, 3U, ExpectedResult = 222UL)]
         [TestCase(9U, 4u, ExpectedResult = 9999UL)]
