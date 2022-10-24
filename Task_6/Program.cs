@@ -16,6 +16,7 @@ namespace Task_6
         {
             Console.WriteLine("Введите кол-во учеников в шеренге:");
             uint pupilCount = uint.Parse(Console.ReadLine().Trim());
+            Console.WriteLine("Введите рост каждого ученика (через пробел):");
             var heights = Console.ReadLine().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(x => {
                 var ai = uint.Parse(x.Trim());
                 if (ai < 1 || ai > MAX_HEIGHT)
@@ -34,14 +35,13 @@ namespace Task_6
                 throw new ArgumentException($"Длина введённого массива ({heights.Length}) не соответствует указанному кол-ву учеников ({pupilCount})!");
             }
             var res = GetSwapPupilsNumbers(heights);
-            Console.WriteLine(res.Key + ' ' + res.Value);
+            Console.WriteLine("{0} {1}", res.Key, res.Value);
             Console.ReadKey();
         }
 
         /// <summary>
         /// Метод получения пары номеров учеников, которых нужно поменять местами
         /// </summary>
-        /// <param name="heights"></param>
         /// <returns>
         /// Пара номеров учеников, которых нужно поменять местами, чтобы все ученики во входном массиве <paramref name="heights"/>
         ///     стояли на местах соот-щих чётности их роста.
@@ -60,22 +60,25 @@ namespace Task_6
                 // если чётность элемента не соот-т чётности его номера, то запоминаем номер этого эл-та
                 if ((heights[i] % 2 == 0) ^ ((i + 1) % 2 == 0))
                 {
+                    if (irregularIndexElements.Count >= 2)
+                    {
+                        return res;
+                    }
                     irregularIndexElements.Add(i);
                 }                
             }
-            if (irregularIndexElements.Count % 2 != 0)
+            // TODO: судя из разбора задачи условие действительно написано не ясно, а именно ответ может быть только
+            // один, когда кол-во неверных индексов равно 2 (т.е. перестановки делать вообще не нужно - нужно вести два
+            // списка (чётных и ненчётных ошибок) и сравнивать их длины)
+            if (irregularIndexElements.Count == 2)
             {
                 // Пробуем по очереди поменять каждый неправильный элемент с каждым другим неправильным, пока не найдём
                 // пару, которая приводит последовательность в нужный вид (или пока не кончатся элементы).
                 for (int i = 0; i < irregularIndexElements.Count; i++)
                 {
                     var el_A = heights[irregularIndexElements[i]];
-                    for (int j = 0; j < irregularIndexElements.Count; j++)
+                    for (int j = i + 1; j < irregularIndexElements.Count; j++)
                     {
-                        if (i == j)
-                        {
-                            continue;
-                        }
                         var el_B = heights[irregularIndexElements[j]];
                         if (el_A == el_B)
                         {

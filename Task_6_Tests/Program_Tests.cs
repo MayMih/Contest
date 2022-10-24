@@ -1,20 +1,53 @@
-﻿using NUnit.Framework;
-using Task_6;
-using System;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using NUnit.Framework;
+
 
 namespace Task_6.Tests
 {
-    [TestFixture(TestName = "Главный метод - пара учеников для замены")]
+    [TestFixture(TestName = "Главный метод - поиск пары учеников для замены"), TestOf(typeof(Program))]
     public class GetSwapPupilsNumbers_Tests
     {
-        [Test()]
-        public void GetSwapPupilsNumbers_Test()
+        private static readonly KeyValuePair<int, int> EMPTY_RESULT = new KeyValuePair<int, int>(-1, -1);
+
+        private static IEnumerable PredefinedTestCases
         {
-            Assert.Fail();
+            get
+            {
+                yield return new TestCaseData(new uint[] { 2u, 1u, 4u, 6u }).Returns(EMPTY_RESULT);
+                yield return new TestCaseData(new uint[] { 2u, 1u, 3u, 6u }).Returns(new KeyValuePair<int, int>(1, 2));
+                yield return new TestCaseData(new uint[] { 1u, 1u, 3u, 6u, 5u }).Returns(EMPTY_RESULT);
+                yield return new TestCaseData(new uint[] { 2u, 2u, 3u, 7u, 5u }).Returns(new KeyValuePair<int, int>(1, 4));
+                yield return new TestCaseData(new uint[] { 2u, 1u, 4u, 3u }).Returns(EMPTY_RESULT);
+                yield return new TestCaseData(new uint[] { 1u, 2u }).Returns(EMPTY_RESULT);
+                yield return new TestCaseData(new uint[] { 2u, 1u }).Returns(new KeyValuePair<int, int>(1, 2));
+                yield return new TestCaseData(new uint[] { 2u, 2u }).Returns(EMPTY_RESULT);
+                yield return new TestCaseData(new uint[] { 1u, 1u }).Returns(EMPTY_RESULT);
+                yield return new TestCaseData(new uint[] { 129u, 88u, 82u, 172u, 101u, 157u, 215u }).Returns(
+                    new KeyValuePair<int, int>(3, 6));
+            }
+        }
+
+        [TestOf(nameof(Program.GetSwapPupilsNumbers))]
+        [TestCaseSource(nameof(PredefinedTestCases))]
+        public KeyValuePair<int, int> GetSwapPupilsNumbers_PredefinedNormalTest(uint[] source)
+        {
+            return Program.GetSwapPupilsNumbers(source);
+        }        
+        
+        [Test]
+        [Repeat(10)]
+        public void GetSwapPupilsNumbers_RandomTest()
+        {
+            var sourceNumbers = new uint[TestContext.CurrentContext.Random.NextByte(2, 10)];
+            for (int i = 0; i < sourceNumbers.Length; i++)
+            {
+                sourceNumbers[i] = (uint)TestContext.CurrentContext.Random.NextByte() + 1;
+            }
+            TestContext.WriteLine("Источник: {0}", string.Join(" ", sourceNumbers));
+            var res = Program.GetSwapPupilsNumbers(sourceNumbers);
+            TestContext.WriteLine("Результат: {0} {1}", res.Key, res.Value);
         }        
     }
 
@@ -35,14 +68,6 @@ namespace Task_6.Tests
         public bool CheckHeightsArray_2_ElementTest(uint a, uint b)
         {
             return Program.CheckHeightsArray(new uint[] { a, b });
-        }
-        
-        [TestCase(new uint[] { 2u, 1u }, ExpectedResult = false)]
-        [TestCase(new uint[] { 1u, 2u, 3u, 4u }, ExpectedResult = true)]
-        [TestCase(new uint[] { 1u, 1u }, ExpectedResult = false)]
-        public bool CheckHeightsArray_Arr_ElementTest(uint[] ab)
-        {
-            return Program.CheckHeightsArray(ab);
-        }
+        }        
     }
 }
