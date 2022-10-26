@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+
 namespace Task_7
 {
     /// <summary>
@@ -49,7 +50,7 @@ namespace Task_7
             var res = new KeyValuePair<int, int>(-1, -1);
             int incorrectIndex = -1;
             int absentStudent = -1;
-            // частоты элементов (дальше 2-х не считаем, т.к. в этом случае уже нет решения)
+            // частоты элементов (большие 2-х не считаем, т.к. в этом случае уже нет решения)
             var elementCount = new uint[accepters.Length];
             for (int i = 0; i < accepters.Length; i++)
             {
@@ -57,13 +58,14 @@ namespace Task_7
                 {
                     return res;
                 }
-                // если три ученика повторяются, то сделать снова ничего нельзя, т.к. замена у нас только одна!
+                // если три ученика повторяются, то сделать ничего нельзя, т.к. замена у нас только одна!
                 if (elementCount[i] == 2)
                 {
                     return res;
                 }
                 elementCount[accepters[i] - 1]++;
             }
+            // ищем номер студента, которому никто не дарит подарки
             for (int i = 0; i < elementCount.Length && absentStudent < 0; i++)
             {
                 if (elementCount[i] == 0)
@@ -75,6 +77,7 @@ namespace Task_7
             {
                 return res;
             }
+            // ищем позицию первого попавшегося студента, котрому подарки дарят несколько раз (но не когда он дарит сам себе)
             for (int i = 0; i < elementCount.Length && incorrectIndex < 0; i++)
             {
                 if (elementCount[i] > 1 && (incorrectIndex < 0 || incorrectIndex == absentStudent))
