@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EDD8CDF2-8DB4-4AF2-ABA0-814EA5D7B657}</ProjectGuid>
+    <ProjectGuid>{44322024-DF0D-4B27-8D12-E6CB91F85DB2}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Task_9</RootNamespace>
-    <AssemblyName>Task_9</AssemblyName>
+    <RootNamespace>Task_10</RootNamespace>
+    <AssemblyName>Task_10</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -48,7 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Doc\Задача 9.mhtml" />
+    <None Include="Doc\Задача 10.mhtml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
