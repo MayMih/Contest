@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Task_10
 {
-    internal static class Program
+    public static class Program
     {
         const double DESIRED_ACCURACY = 0.000_001;
 
@@ -173,13 +173,13 @@ namespace Task_10
         /// </summary>
         /// <param name="polyPoints"></param>
         /// <returns></returns>
-        private static double CalculatePolygonSquare(IList<KeyValuePair<double, double>> polyPoints)
+        public static double CalculatePolygonSquare(IList<KeyValuePair<double, double>> polyPoints)
         {
             double square = 0;
             for (int i = 0; i < polyPoints.Count; i++)
             {
                 int y1_Index = i + 1 < polyPoints.Count ? i + 1 : 0;
-                int y2_Index = i - 1 > 0 ? i - 1 : polyPoints.Count - 1;
+                int y2_Index = i - 1 >= 0 ? i - 1 : polyPoints.Count - 1;
                 square += polyPoints[i].Key * (polyPoints[y1_Index].Value - polyPoints[y2_Index].Value);
             }
             return Math.Abs(square) / 2;
