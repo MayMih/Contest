@@ -175,14 +175,14 @@ namespace Task_10
         /// <returns></returns>
         private static double CalculatePolygonSquare(IList<KeyValuePair<double, double>> polyPoints)
         {
-            double halfSquare = 0;
-            for (int i = 0; i < polyPoints.Count +1; i++)
+            double square = 0;
+            for (int i = 0; i < polyPoints.Count; i++)
             {
                 int y1_Index = i + 1 < polyPoints.Count ? i + 1 : 0;
                 int y2_Index = i - 1 > 0 ? i - 1 : polyPoints.Count - 1;
-                halfSquare += polyPoints[i].Key * (polyPoints[y1_Index].Value - polyPoints[y2_Index].Value);
+                square += polyPoints[i].Key * (polyPoints[y1_Index].Value - polyPoints[y2_Index].Value);
             }
-            return Math.Abs(halfSquare) / 2;
+            return Math.Abs(square) / 2;
         }
 
         private static double CalculateLinear_Y(double middleX, KeyValuePair<int, int> leftPoint, KeyValuePair<int, int> rightPoint)
