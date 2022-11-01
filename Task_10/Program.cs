@@ -193,27 +193,6 @@ namespace Task_10
             return mY;
         }
 
-
-        private static KeyValuePair<int, int> FindNearestPoint(IEnumerable<KeyValuePair<int, int>> knownPoints, double middleX)
-        {
-            KeyValuePair<int, int> nearestPoint;
-            double minDif = double.MaxValue;
-            double curDif;
-            int key = 0, value = 0;
-            foreach (var p in knownPoints)
-            {
-                curDif = Math.Abs(p.Key - middleX);
-                if (curDif < minDif)
-                {
-                    minDif = curDif;
-                    key = p.Key;
-                    value = p.Value;
-                }
-            }
-            nearestPoint = new KeyValuePair<int, int>(key, value);
-            return nearestPoint;
-        }
-
         /// <summary>
         /// Метод парсинга одной целочисленной координаты
         /// </summary>
