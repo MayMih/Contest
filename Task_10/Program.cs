@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Task_10
 {
     internal static class Program
     {
+        const double DESIRED_ACCURACY = 0.000_001;
+
         static void Main()
         {
             Console.WriteLine("Введите кол-во вершин выпуклого многоугольника:");
@@ -52,33 +53,29 @@ namespace Task_10
         /// <returns>
         /// Координата X вертикальной линии делящей фигуру пополам
         /// </returns>
-        private static double GetXCoordOfHalfLine(IList<KeyValuePair<int, int>> points, double desiredAccuracy = 0.000_001)
+        private static double GetXCoordOfHalfLine(IList<KeyValuePair<int, int>> points, double startX = double.NaN, 
+            double desiredAccuracy = DESIRED_ACCURACY)
         {
-            // ищем половину площади многоугольника по формуле Гаусса
-            double halfSquare = 0;
-            for (int i = 0; i < points.Count; i++)
-            {
-                int y1_Index = i + 1 < points.Count ? i + 1 : 0;
-                int y2_Index = i - 1 > 0 ? i - 1 : points.Count - 1;
-                halfSquare += points[i].Key * (points[y1_Index].Value - points[y2_Index].Value);
-            }            
-            halfSquare = Math.Abs(halfSquare) / 4;
-            // пробуем найти простое решение - ищем координату половины ширины фигуры по оси Х
-            int max_X = points[0].Key;
-            int min_X = points[0].Key;
-            foreach (var p in points)
-            {
-                if (p.Key > max_X)
-                {
-                    max_X = p.Key;
-                }
-                else if (p.Key < min_X)
-                {
-                    min_X = p.Key;
-                }
-            }
-            double middleX = (max_X - min_X) / 2;
+            double middleX = startX;
             double? middleY1 = null, middleY2 = null;
+            // пробуем найти простое решение - ищем координату половины ширины фигуры по оси Х                        
+            if (double.IsNaN(startX))
+            {
+                int max_X = points[0].Key;
+                int min_X = points[0].Key;
+                foreach (var p in points)
+                {
+                    if (p.Key > max_X)
+                    {
+                        max_X = p.Key;
+                    }
+                    else if (p.Key < min_X)
+                    {
+                        min_X = p.Key;
+                    }
+                }
+                middleX = (max_X - min_X) / 2;
+            }            
             // проверяем предельный случай, когда вершины попадают в существующие.            
             var knownCrossPoints = points.Where(y => Math.Abs(middleX - y.Key) <= desiredAccuracy);
             if (knownCrossPoints.GetEnumerator().MoveNext())
@@ -88,88 +85,114 @@ namespace Task_10
             if (knownCrossPoints.GetEnumerator().MoveNext())
             {
                 middleY2 = knownCrossPoints.GetEnumerator().Current.Value;
-            }                                    
+            }
             // ищем 2 (или 4) ближайшие вершины между которыми попала точка middleX (снизу и сверху)
             KeyValuePair<int, int>? leftPoint_1 = null, leftPoint_2 = null;
             KeyValuePair<int, int>? rightPoint_1 = null, rightPoint_2 = null;
             // если среди вершин сразу средний Y найти не удалось, то ищем верхнюю и нижнюю грани выпуклого многоугольника,
-            //      по которым идёт пересечение линией проведённой через предполагаемый "средний" X.
-            if (!middleY1.HasValue || !middleY2.HasValue)
+            //      по которым идёт пересечение линией проведённой через предполагаемый "средний" X.            
+            // точку(и) пересечения будем считать по параметрическому(им) уравнению(ям) прямой(ых) (см. http://www.cleverstudents.ru/line_and_plane/line_passes_through_2_points.html)
+            // если мы нашли ещё не все точки пересечения, то ищем оставшиеся
+            for (int i = 0; i < points.Count && (!middleY1.HasValue || !middleY2.HasValue); i++)
             {
-                var foundPoint = FindNearestPoint(points, middleX);
-                if (foundPoint.Key > middleX)
+                if (points[i].Key < middleX && (i != points.Count - 1) && points[i + 1].Key > middleX)
                 {
-                    rightPoint_1 = foundPoint;
+                    leftPoint_1 = points[i];
+                    rightPoint_1 = points[i + 1];
+                    // если только один Y ранее совпал с одной из вершин, значит мы неправильно поняли, какой это Y по счёту.
+                    if (middleY1.HasValue)
+                    {
+                        middleY2 = middleY1;
+                    }
+                    middleY1 = CalculateLinear_Y(middleX, leftPoint_1.Value, rightPoint_1.Value);
                 }
                 else
                 {
-                    leftPoint_1 = foundPoint;
-                }
-                // т.к. точки идут подряд (по час. стрелке), мы можем, найдя одну ближайшую к пересечению точку, найти
-                // вторую просто сдвиув индекс первой на 1 вправо или влево соот-но.
-                for (int i = 0; i < points.Count; i++)
-                {
-                    if (points[i].Key == foundPoint.Key && points[i].Value == foundPoint.Value)
+                    int nextPointIndex = i + 1 != points.Count ? i + 1 : 0;
+                    if (points[i].Key > middleX && points[nextPointIndex].Key < middleX)
                     {
-                        if (leftPoint_1.HasValue)
+                        leftPoint_2 = points[nextPointIndex];
+                        rightPoint_2 = points[i];
+                        // если только один Y ранее совпал с одной из вершин, значит мы неправильно поняли, какой это Y по счёту.
+                        if (middleY2.HasValue)
                         {
-                            rightPoint_1 = i < (points.Count - 1) ? points[i + 1] : points[0];
-                            break;
+                            middleY1 = middleY2;
                         }
-                        else if (rightPoint_1.HasValue)
-                        {
-                            leftPoint_1 = i > 0 ? points[i - 1] : points[points.Count - 1];
-                            break;
-                        }
-                    }
-                }              
-                // ищем Y из уравнения прямой, порходящей через 2 точки: y = (x - x1)(y2 - y1) / (x2 - x1) + y1;
-                double mY = (middleX - leftPoint_1.Value.Key) * (rightPoint_1.Value.Value - leftPoint_1.Value.Value) / 
-                    (rightPoint_1.Value.Key - leftPoint_1.Value.Key) + leftPoint_1.Value.Value;
-
-                if (!middleY1.HasValue)
-                {
-                    middleY1 = mY;
-                }
-                else if (!middleY2.HasValue)
-                {
-                    middleY2 = mY;
-                }
-                // если мы нашли ещё не все точки пересечения, то ищем оставшиеся
-                for (int i = 0; i < points.Count && !middleY1.HasValue && !middleY2.HasValue; i++)
-                {
-                    if (points[i].Key < middleX && (i != points.Count - 1) && points[i + 1].Key > middleX)
-                    {
-                        leftPoint_1 = points[i];
-                        rightPoint_1 = points[i + 1];
-                    }
-                    else
-                    {
-                        int nexPointIndex = i + 1 != points.Count ? i + 1 : 0;
-                        if (points[i].Key > middleX && points[nexPointIndex].Key < middleX)
-                        {
-                            leftPoint_2 = points[nexPointIndex];
-                            rightPoint_2 = points[i];
-                        }
-                    }
+                        middleY2 = CalculateLinear_Y(middleX, leftPoint_2.Value, rightPoint_2.Value);
+                    }                    
                 }
             }
-            // точку(и) пересечения будем считать по параметрическому(им) уравнению(ям) прямой(ых) (см. http://www.cleverstudents.ru/line_and_plane/line_passes_through_2_points.html)
-            var linePoint_1 = new KeyValuePair<double, double>(middleX, middleY1.Value);
-            var linePoint_2 = new KeyValuePair<double, double>(middleX, middleY2.Value);            
-            double calculatedHalfSquare = 0;
-            // считаем половину площади с учётом двух новых точек
-            // <...>
-            if (calculatedHalfSquare - halfSquare <= desiredAccuracy)
+            // верхняя точка пересечения с линией деления
+            var crossPoint_1 = new KeyValuePair<double, double>(middleX, middleY1.Value);
+            // нижняя точка пересечения с линией деления
+            var crossPoint_2 = new KeyValuePair<double, double>(middleX, middleY2.Value);
+            // рассчитываем площади двух половин фигуры с учётом двух новых точек
+            var leftHalfPoints = new List<KeyValuePair<double, double>>();
+            var rightHalfPoints = new List<KeyValuePair<double, double>>();
+            bool isLeftSideCompleted = false;
+            bool isRightSideCompleted = false;
+            foreach (var p in points)
             {
-                return calculatedHalfSquare;
+                if (p.Key <= middleX)
+                {
+                    if (!isRightSideCompleted)
+                    {
+                        rightHalfPoints.Add(crossPoint_2);
+                        rightHalfPoints.Add(crossPoint_1);
+                        isRightSideCompleted = true;
+                    }
+                    leftHalfPoints.Add(new KeyValuePair<double, double>(p.Key, p.Value));
+                }
+                if (p.Key >= middleX)
+                {
+                    if (!isLeftSideCompleted)
+                    {
+                        leftHalfPoints.Add(crossPoint_1);
+                        leftHalfPoints.Add(crossPoint_2);
+                        isLeftSideCompleted = true;
+                    }
+                    rightHalfPoints.Add(new KeyValuePair<double, double>(p.Key, p.Value));
+                }
+            }
+            //ищем половину площади многоугольника по формуле Гаусса
+            double halfSquare_1 = CalculatePolygonSquare(leftHalfPoints);
+            double halfSquare_2 = CalculatePolygonSquare(rightHalfPoints);
+            if (Math.Abs(halfSquare_1 - halfSquare_2) <= desiredAccuracy)
+            {
+                return middleX;
+            }
+            else 
+            {
+                double stepValue = desiredAccuracy; // (max_X - min_X) / 10;
+                return GetXCoordOfHalfLine(points, halfSquare_1 > halfSquare_2 ? middleX - stepValue : middleX + stepValue);
             }
         }
 
-        private static bool isAllPointsFound()
+        /// <summary>
+        /// Метод расчёта площади многоугольника по формуле "Шнуровки" Гаусса
+        /// </summary>
+        /// <param name="polyPoints"></param>
+        /// <returns></returns>
+        private static double CalculatePolygonSquare(IList<KeyValuePair<double, double>> polyPoints)
         {
-            throw new NotImplementedException();
+            double halfSquare = 0;
+            for (int i = 0; i < polyPoints.Count +1; i++)
+            {
+                int y1_Index = i + 1 < polyPoints.Count ? i + 1 : 0;
+                int y2_Index = i - 1 > 0 ? i - 1 : polyPoints.Count - 1;
+                halfSquare += polyPoints[i].Key * (polyPoints[y1_Index].Value - polyPoints[y2_Index].Value);
+            }
+            return Math.Abs(halfSquare) / 2;
         }
+
+        private static double CalculateLinear_Y(double middleX, KeyValuePair<int, int> leftPoint, KeyValuePair<int, int> rightPoint)
+        {
+            // ищем Y из уравнения прямой, порходящей через 2 точки: y = (x - x1)(y2 - y1) / (x2 - x1) + y1;
+            double mY = (middleX - leftPoint.Key) * (rightPoint.Value - leftPoint.Value) / (rightPoint.Key - leftPoint.Key) + 
+                leftPoint.Value;
+            return mY;
+        }
+
 
         private static KeyValuePair<int, int> FindNearestPoint(IEnumerable<KeyValuePair<int, int>> knownPoints, double middleX)
         {
