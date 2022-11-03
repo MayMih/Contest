@@ -7,7 +7,7 @@ namespace Task_10
 {
     public static class Program
     {
-        const double DESIRED_ACCURACY = 0.000_001;
+        public const double DESIRED_ACCURACY = 0.000_001;
 
         static void Main()
         {
@@ -33,7 +33,8 @@ namespace Task_10
             }
             else
             {
-                double res = GetXCoordOfHalfLine(points);
+                double square = CalculatePolygonSquare(points.Select(x => new KeyValuePair<double, double>(x.Key, x.Value)).ToList());
+                double res = GetXCoordOfHalfLine(points, square / 2);
                 Console.WriteLine("{0:f9}", Math.Round(res, 9));
             }
             Console.ReadKey();
@@ -53,9 +54,13 @@ namespace Task_10
         /// <returns>
         /// Координата X вертикальной линии делящей фигуру пополам
         /// </returns>
-        private static double GetXCoordOfHalfLine(IList<KeyValuePair<int, int>> points, double startX = double.NaN, 
-            double desiredAccuracy = DESIRED_ACCURACY)
+        public static double GetXCoordOfHalfLine(IList<KeyValuePair<int, int>> points, double halfSquare, 
+            double startX = double.NaN, double desiredAccuracy = DESIRED_ACCURACY)
         {
+            if (halfSquare == 0)
+            {
+                throw new ArgumentException($"Параметр {nameof(halfSquare)} должен быть строго больше 0!", nameof(halfSquare));
+            }
             double middleX = startX;
             double? middleY1 = null, middleY2 = null;
             // пробуем найти простое решение - ищем координату половины ширины фигуры по оси Х                        
@@ -74,17 +79,20 @@ namespace Task_10
                         min_X = p.Key;
                     }
                 }
-                middleX = (max_X - min_X) / 2;
+                middleX = (max_X + min_X) / 2f;
             }            
             // проверяем предельный случай, когда вершины попадают в существующие.            
             var knownCrossPoints = points.Where(y => Math.Abs(middleX - y.Key) <= desiredAccuracy);
-            if (knownCrossPoints.GetEnumerator().MoveNext())
+            using (var iter = knownCrossPoints.GetEnumerator())
             {
-                middleY1 = knownCrossPoints.GetEnumerator().Current.Value;
-            }
-            if (knownCrossPoints.GetEnumerator().MoveNext())
-            {
-                middleY2 = knownCrossPoints.GetEnumerator().Current.Value;
+                if (iter.MoveNext())
+                {
+                    middleY1 = iter.Current.Value;
+                }
+                if (iter.MoveNext())
+                {
+                    middleY2 = iter.Current.Value;
+                }
             }
             // ищем 2 (или 4) ближайшие вершины между которыми попала точка middleX (снизу и сверху)
             KeyValuePair<int, int>? leftPoint_1 = null, leftPoint_2 = null;
@@ -93,23 +101,27 @@ namespace Task_10
             //      по которым идёт пересечение линией проведённой через предполагаемый "средний" X.            
             // точку(и) пересечения будем считать по параметрическому(им) уравнению(ям) прямой(ых) (см. http://www.cleverstudents.ru/line_and_plane/line_passes_through_2_points.html)
             // если мы нашли ещё не все точки пересечения, то ищем оставшиеся
-            for (int i = 0; i < points.Count && (!middleY1.HasValue || !middleY2.HasValue); i++)
+            for (int i = 0, nextPointIndex = 0; i < points.Count && (!middleY1.HasValue || !middleY2.HasValue); i++)
             {
-                if (points[i].Key < middleX && (i != points.Count - 1) && points[i + 1].Key > middleX)
+                if (points[i].Key < middleX) 
                 {
-                    leftPoint_1 = points[i];
-                    rightPoint_1 = points[i + 1];
-                    // если только один Y ранее совпал с одной из вершин, значит мы неправильно поняли, какой это Y по счёту.
-                    if (middleY1.HasValue)
+                    nextPointIndex = (i + 1 == points.Count) ? 0 : i + 1;
+                    if (points[nextPointIndex].Key > middleX)
                     {
-                        middleY2 = middleY1;
+                        leftPoint_1 = points[i];
+                        rightPoint_1 = points[nextPointIndex];
+                        // если только один Y ранее совпал с одной из вершин, значит мы неправильно поняли, какой это Y по счёту.
+                        if (middleY1.HasValue)
+                        {
+                            middleY2 = middleY1;
+                        }
+                        middleY1 = CalculateLinear_Y(middleX, leftPoint_1.Value, rightPoint_1.Value);
                     }
-                    middleY1 = CalculateLinear_Y(middleX, leftPoint_1.Value, rightPoint_1.Value);
                 }
-                else
+                else if (points[i].Key > middleX)
                 {
-                    int nextPointIndex = i + 1 != points.Count ? i + 1 : 0;
-                    if (points[i].Key > middleX && points[nextPointIndex].Key < middleX)
+                    nextPointIndex = i + 1 != points.Count ? i + 1 : 0;
+                    if (points[nextPointIndex].Key < middleX)
                     {
                         leftPoint_2 = points[nextPointIndex];
                         rightPoint_2 = points[i];
@@ -128,43 +140,33 @@ namespace Task_10
             var crossPoint_2 = new KeyValuePair<double, double>(middleX, middleY2.Value);
             // рассчитываем площади двух половин фигуры с учётом двух новых точек
             var leftHalfPoints = new List<KeyValuePair<double, double>>();
-            var rightHalfPoints = new List<KeyValuePair<double, double>>();
             bool isLeftSideCompleted = false;
-            bool isRightSideCompleted = false;
             foreach (var p in points)
             {
                 if (p.Key <= middleX)
                 {
-                    if (!isRightSideCompleted)
-                    {
-                        rightHalfPoints.Add(crossPoint_2);
-                        rightHalfPoints.Add(crossPoint_1);
-                        isRightSideCompleted = true;
-                    }
                     leftHalfPoints.Add(new KeyValuePair<double, double>(p.Key, p.Value));
                 }
-                if (p.Key >= middleX)
+                if (p.Key >= middleX && !isLeftSideCompleted)
                 {
-                    if (!isLeftSideCompleted)
-                    {
-                        leftHalfPoints.Add(crossPoint_1);
-                        leftHalfPoints.Add(crossPoint_2);
-                        isLeftSideCompleted = true;
-                    }
-                    rightHalfPoints.Add(new KeyValuePair<double, double>(p.Key, p.Value));
+                    leftHalfPoints.Add(crossPoint_1);
+                    leftHalfPoints.Add(crossPoint_2);
+                    isLeftSideCompleted = true;
                 }
             }
             //ищем половину площади многоугольника по формуле Гаусса
-            double halfSquare_1 = CalculatePolygonSquare(leftHalfPoints);
-            double halfSquare_2 = CalculatePolygonSquare(rightHalfPoints);
-            if (Math.Abs(halfSquare_1 - halfSquare_2) <= desiredAccuracy)
+            double calculatedHalfSquare = CalculatePolygonSquare(leftHalfPoints);
+            var diff = calculatedHalfSquare - halfSquare;
+            if (Math.Abs(diff) <= desiredAccuracy)
             {
                 return middleX;
             }
             else 
             {
-                double stepValue = desiredAccuracy; // (max_X - min_X) / 10;
-                return GetXCoordOfHalfLine(points, halfSquare_1 > halfSquare_2 ? middleX - stepValue : middleX + stepValue);
+                // TODO: возможно над шаом нужно подумать дольше, если брать 1/10, то приближение идёт очень долго, но
+                // малые значения могут быть опасны (можно перескочить, по крайней мере на первом шаге)
+                double stepValue = Math.Abs(diff / 5); 
+                return GetXCoordOfHalfLine(points, halfSquare, diff < 0 ? middleX + stepValue : middleX - stepValue);
             }
         }
 

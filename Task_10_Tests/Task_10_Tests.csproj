@@ -53,10 +53,12 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Program_TestData.cs" />
     <Compile Include="Program_Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Doc\Примеры фигур %28со средними линиями%29.ggb" />
     <None Include="Doc\Примеры фигур.ggb" />
     <None Include="packages.config" />
   </ItemGroup>
