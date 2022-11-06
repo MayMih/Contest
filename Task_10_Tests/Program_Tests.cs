@@ -10,9 +10,9 @@ namespace Task_10.Tests
     [Order(1)]
     public class CalculatePolygonSquare_Tests
     {
-        [TestCaseSource(typeof(Program_TestData), nameof(Program_TestData.GetFigurePoints), new object[] { false })]
+        [TestCaseSource(typeof(Program_TestData), nameof(Program_TestData.GetFigurePoints), new object[] { true })]
         [Test(Description = "Нормальные данные")]
-        public double CalculatePolygonSquare_NormalTest(IEnumerable<(int X, int Y)> polygonEdges)
+        public double CalculatePolygonSquare_NormalTest(IEnumerable<(int X, int Y)> polygonEdges, float _)
         {
             return Program.CalculatePolygonSquare(polygonEdges.ToKeyValueDoublesList());
         }
@@ -28,12 +28,13 @@ namespace Task_10.Tests
     [TestFixture(TestName = "Средняя точка фигур (выпуклых многоугольников)")]
     public class GetXCoordOfHalfLine_Tests
     {
-        [TestCaseSource(typeof(Program_TestData), nameof(Program_TestData.GetFigurePoints), new object[] { true })]
+        [TestCaseSource(typeof(Program_TestData), nameof(Program_TestData.GetFigurePoints), new object[] { false })]
         [Test(Description = "Нормальные данные")]
-        public double GetXCoordOfHalfLine_NormalDataTest(IEnumerable<(int X, int Y)> polygonEdges)
+        public void GetXCoordOfHalfLine_NormalDataTest(IEnumerable<(int X, int Y)> polygonEdges, float expectedResult)
         {
             var square = Program.CalculatePolygonSquare(polygonEdges.ToKeyValueDoublesList());
-            return Program.GetXCoordOfHalfLine(polygonEdges.ToKeyValueIntsList(), square / 2);
+            var actualRes = Program.GetXCoordOfHalfLine(polygonEdges.ToKeyValueIntsList(), square / 2);
+            Assert.AreEqual(expectedResult, actualRes, Program.DESIRED_ACCURACY);
         }
 
         [TestCaseSource(typeof(Program_TestData), nameof(Program_TestData.BadFigurePoints))]
